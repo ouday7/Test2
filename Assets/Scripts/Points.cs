@@ -1,50 +1,53 @@
-﻿using DG.Tweening;
+﻿using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 public class Points : MonoBehaviour
 {
+    [System.Serializable]
+    private class WayPoints
+    {
+        public Vector3[] points;
+    }
+    
+    [SerializeField] private float moveDuration;
     [SerializeField] private TextAsset textJson;
-    private int _j = 0;
-    public float x;
+    [SerializeField] private WayPoints pointList = new WayPoints();
+    private int _counter;
+    private WaitForSeconds _delay;
 
-    [System.Serializable]
-    public class Waypoints
+    private void Start()
     {
-        public float x;
-        public float y;
-        public float z;
+        pointList = JsonUtility.FromJson<WayPoints>(textJson.text);
+        StartCoroutine(Movement());
+        _delay = new WaitForSeconds(2);
     }
-
-    [System.Serializable]
-    public class Xwaypoints
+    private IEnumerator Movement()
     {
-        public Waypoints[] ppoints;
-    }
-
-    public Xwaypoints pointList = new Xwaypoints();
-
-    public void Start()
-    {
-        pointList = JsonUtility.FromJson<Xwaypoints>(textJson.text);
-       Movement();
-
-    }
-    void Movement()
-    {
-        if (_j == pointList.ppoints.Length)
+        if (_counter == pointList.points.Length)
         {
-            _j = 0;
+            _counter = 0;
             Debug.Log("work !");
         }
 
-        gameObject.transform.DOMove(new Vector3(pointList.ppoints[_j].x, pointList.ppoints[_j].y,pointList.ppoints[_j].z),x).OnComplete(() => 
-        {
-            System.Threading.Thread.Sleep(100);
-            _j++;
-            Movement();
-        });
+        gameObject.transform.DOMove(pointList.points[_counter], moveDuration);
+
+        yield return _delay;
+        
+        _counter++;
+        StartCoroutine(Movement());
     }
-    
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.blue;
+        var startPoint = pointList.points[pointList.points.Length - 1];
+
+        foreach (var point in pointList.points)
+        {
+            Gizmos.DrawSphere(point,.25f);
+            Gizmos.DrawLine(startPoint, point);
+            startPoint = point;
+        }
+    }
 }
-
-
