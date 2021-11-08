@@ -1,53 +1,50 @@
-﻿using System.Collections;
-using DG.Tweening;
+﻿using DG.Tweening;
 using UnityEngine;
 
 public class Points : MonoBehaviour
 {
-    [System.Serializable]
-    private class WayPoints
-    {
-        public Vector3[] points;
-    }
-    
-    [SerializeField] private float moveDuration;
     [SerializeField] private TextAsset textJson;
-    [SerializeField] private WayPoints pointList = new WayPoints();
-    private int _counter;
-    private WaitForSeconds _delay;
+    private int _j = 0;
+    public float x;
 
-    private void Start()
+    [System.Serializable]
+    public class Waypoints
     {
-        pointList = JsonUtility.FromJson<WayPoints>(textJson.text);
-        StartCoroutine(Movement());
-        _delay = new WaitForSeconds(2);
+        public float x;
+        public float y;
+        public float z;
     }
-    private IEnumerator Movement()
+
+    [System.Serializable]
+    public class Xwaypoints
     {
-        if (_counter == pointList.points.Length)
+        public Waypoints[] ppoints;
+    }
+
+    public Xwaypoints pointList = new Xwaypoints();
+
+    public void Start()
+    {
+        pointList = JsonUtility.FromJson<Xwaypoints>(textJson.text);
+       Movement();
+
+    }
+    void Movement()
+    {
+        if (_j == pointList.ppoints.Length)
         {
-            _counter = 0;
+            _j = 0;
             Debug.Log("work !");
         }
 
-        gameObject.transform.DOMove(pointList.points[_counter], moveDuration);
-
-        yield return _delay;
-        
-        _counter++;
-        StartCoroutine(Movement());
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.blue;
-        var startPoint = pointList.points[pointList.points.Length - 1];
-
-        foreach (var point in pointList.points)
+        gameObject.transform.DOMove(new Vector3(pointList.ppoints[_j].x, pointList.ppoints[_j].y,pointList.ppoints[_j].z),x).OnComplete(() => 
         {
-            Gizmos.DrawSphere(point,.25f);
-            Gizmos.DrawLine(startPoint, point);
-            startPoint = point;
-        }
+            System.Threading.Thread.Sleep(100);
+            _j++;
+            Movement();
+        });
     }
+    
 }
+
+
